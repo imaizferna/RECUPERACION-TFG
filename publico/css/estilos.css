@@ -1,0 +1,223 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Contenedor principal de todas las páginas */
+.contenedor {
+    max-width: 1200px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+}
+
+/* Títulos */
+h1, h2 {
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 1.8rem; }
+
+/* Tarjetas para datos meteorológicos (panel) */
+.datos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.tarjeta {
+    background: white;
+    border-radius: 20px;
+    padding: 25px 20px;
+    min-width: 180px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.tarjeta:hover {
+    transform: translateY(-5px);
+}
+
+.tarjeta h3 {
+    font-size: 1.2rem;
+    color: #1e3c72;
+    margin-bottom: 15px;
+}
+
+.valor {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2a5298;
+}
+
+.unidad {
+    font-size: 1rem;
+    color: #666;
+}
+
+/* Tablas (listado de umbrales) */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #2a5298;
+    color: white;
+    font-weight: bold;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Formularios (login, crear/editar umbral) */
+.formulario {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.formulario label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+    color: #1e3c72;
+}
+
+.formulario input, .formulario select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.formulario button {
+    background-color: #2a5298;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 20px;
+    transition: background 0.2s;
+}
+
+.formulario button:hover {
+    background-color: #1e3c72;
+}
+
+.formulario .cancelar {
+    background-color: #6c757d;
+    margin-left: 10px;
+}
+
+.formulario .cancelar:hover {
+    background-color: #5a6268;
+}
+
+/* Enlaces de acción (editar, eliminar, crear) */
+.acciones {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.acciones a, .enlace-boton {
+    display: inline-block;
+    background-color: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 30px;
+    text-decoration: none;
+    margin: 5px;
+    transition: background 0.2s;
+}
+
+.acciones a:hover, .enlace-boton:hover {
+    background-color: #218838;
+}
+
+.acciones a.eliminar {
+    background-color: #dc3545;
+}
+
+.acciones a.eliminar:hover {
+    background-color: #c82333;
+}
+
+/* Mensajes de error */
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Pie de página */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+    .contenedor {
+        padding: 20px;
+    }
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.4rem; }
+    .tarjeta {
+        min-width: 140px;
+        padding: 15px;
+    }
+    .valor {
+        font-size: 1.8rem;
+    }
+    table, th, td {
+        font-size: 0.8rem;
+        padding: 8px;
+    }
+}
