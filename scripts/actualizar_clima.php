@@ -21,6 +21,7 @@ $humedad = $datos['main']['humidity'];
 $presion = $datos['main']['pressure'];
 $viento = $datos['wind']['speed'];
 
+# Guardar en BBDD
 $conn = conectar_bd();
 $sql = "INSERT INTO datos_clima (temperatura, humedad, presion, velocidad_viento, fecha_hora) 
         VALUES ($temperatura, $humedad, $presion, $viento, NOW())";
@@ -29,6 +30,17 @@ if (mysqli_query($conn, $sql)) {
 } else {
     echo "❌ Error al guardar: " . mysqli_error($conn) . "\n";
 }
+
+# Guardar en Redis
+$redis = new Redis();
+$redis->connect('redis', 6379);
+$redis->setex('clima_actual', 600, json_encode([
+    'temperatura' => $temperatura,
+    'humedad' => $humedad,
+    'presion' => $presion,
+    'viento' => $viento,
+    'fecha_hora' => date('Y-m-d H:i:s')
+]));
 
 # Comprobar umbrales
 $sql_umbrales = "SELECT * FROM umbrales WHERE activo = 1";

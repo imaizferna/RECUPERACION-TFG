@@ -8,6 +8,7 @@ services:
       - ./app:/var/www/html/app
       - ./publico:/var/www/html/publico
       - ./scripts:/var/www/html/scripts
+      - ./vendor:/var/www/html/vendor
     environment:
       - MYSQL_HOST=db
       - MYSQL_USER=${MYSQL_USER}

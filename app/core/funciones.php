@@ -16,20 +16,38 @@ function conectar_bd() {
 
 # ==================== PANEL PRINCIPAL ====================
 function mostrar_panel() {
-    $conn = conectar_bd();
-    $sql = "SELECT temperatura, humedad, presion, velocidad_viento, fecha_hora 
-            FROM datos_clima ORDER BY fecha_hora DESC LIMIT 1";
-    $resultado = mysqli_query($conn, $sql);
-    if (mysqli_num_rows($resultado) > 0) {
-        $fila = mysqli_fetch_assoc($resultado);
-        $temperatura = $fila['temperatura'];
-        $humedad = $fila['humedad'];
-        $presion = $fila['presion'];
-        $viento = $fila['velocidad_viento'];
-    } else {
-        $temperatura = $humedad = $presion = $viento = "No hay datos";
+    // -------------------- INTENTAR LEER DESDE REDIS --------------------
+    try {
+        $redis = new Redis();   // Uso de clase externa, justificado
+        $redis->connect('redis', 6379);
+        $cached = $redis->get('clima_actual');
+        if ($cached) {
+            $datos = json_decode($cached, true);
+            $temperatura = $datos['temperatura'];
+            $humedad = $datos['humedad'];
+            $presion = $datos['presion'];
+            $viento = $datos['viento'];
+            echo "<!-- Datos desde Redis -->"; // opcional, para depurar
+        } else {
+            throw new Exception("No hay caché");
+        }
+    } catch (Exception $e) {
+        // -------------------- FALLBACK A MySQL --------------------
+        $conn = conectar_bd();
+        $sql = "SELECT temperatura, humedad, presion, velocidad_viento, fecha_hora 
+                FROM datos_clima ORDER BY fecha_hora DESC LIMIT 1";
+        $resultado = mysqli_query($conn, $sql);
+        if (mysqli_num_rows($resultado) > 0) {
+            $fila = mysqli_fetch_assoc($resultado);
+            $temperatura = $fila['temperatura'];
+            $humedad = $fila['humedad'];
+            $presion = $fila['presion'];
+            $viento = $fila['velocidad_viento'];
+        } else {
+            $temperatura = $humedad = $presion = $viento = "No hay datos";
+        }
+        mysqli_close($conn);
     }
-    mysqli_close($conn);
     require_once __DIR__ . '/../vistas/panel.php';
 }
 
