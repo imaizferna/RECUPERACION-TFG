@@ -8,7 +8,19 @@
 </head>
 <body>
 <div class="contenedor">
+    <!-- Botonera superior -->
+    <div class="botonera">
+        <?php if ($is_logged_in): ?>
+            <span>👤 Bienvenido, <?php echo htmlspecialchars($username); ?></span>
+            <a href="/logout" class="btn btn-logout">Cerrar sesión</a>
+        <?php else: ?>
+            <a href="/login" class="btn btn-login">🔐 Iniciar sesión</a>
+        <?php endif; ?>
+        <a href="/umbrales" class="btn btn-umbrales">⚙️ Gestionar umbrales</a>
+    </div>
+
     <h1>Panel Meteorológico en Tiempo Real</h1>
+    
     <div class="datos">
         <div class="tarjeta">
             <h3>Temperatura</h3>
@@ -26,8 +38,12 @@
             <h3>Viento</h3>
             <div class="valor"><?php echo $viento; ?> <span class="unidad">m/s</span></div>
         </div>
+        <div class="tarjeta">
+            <h3>📈 Media 24h</h3>
+            <div class="valor"><?php echo $media_24h; ?> <span class="unidad">°C</span></div>
+        </div>
     </div>
-    <h2 style="text-align: center; margin-top: 30px; color: white;">🗺️ Ubicación: Pamplona</h2>
+    <h2 style="text-align: center; margin-top: 30px; color: white;">Ubicación: Pamplona</h2>
     <div id="map" style="height: 400px; width: 100%; max-width: 800px; margin: 0 auto; border-radius: 15px;"></div>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

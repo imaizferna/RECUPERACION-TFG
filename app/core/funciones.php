@@ -1,57 +1,69 @@
 <?php
 
-# ==================== CONEXIÓN A LA BASE DE DATOS ====================
+# Conexión a la base de datos
 function conectar_bd() {
+    // Desactiva el lanzamiento de excepciones (modo procedural tradicional)
+    mysqli_report(MYSQLI_REPORT_OFF);
     $host = getenv('MYSQL_HOST');
     $usuario = getenv('MYSQL_USER');
     $contrasena = getenv('MYSQL_PASSWORD');
     $base_datos = getenv('MYSQL_DATABASE');
-
-    $conexion = mysqli_connect($host, $usuario, $contrasena, $base_datos);
-    if (!$conexion) {
-        die("Error de conexión: " . mysqli_connect_error());
+    $conn = @mysqli_connect($host, $usuario, $contrasena, $base_datos);
+    if (!$conn) {
+        return false;
     }
-    return $conexion;
+    return $conn;
 }
 
 # ==================== PANEL PRINCIPAL ====================
 function mostrar_panel() {
-    // -------------------- INTENTAR LEER DESDE REDIS --------------------
-    try {
-        $redis = new Redis();   // Uso de clase externa, justificado
-        $redis->connect('redis', 6379);
-        $cached = $redis->get('clima_actual');
+    $temperatura = $humedad = $presion = $viento = "No hay datos";
+    $media_24h = "No disponible";
+
+    // Intentar leer desde Redis
+    $redis = @new Redis();
+    if ($redis) {
+        @$redis->connect('redis', 6379);
+        $cached = @$redis->get('clima_actual');
         if ($cached) {
             $datos = json_decode($cached, true);
             $temperatura = $datos['temperatura'];
             $humedad = $datos['humedad'];
             $presion = $datos['presion'];
             $viento = $datos['viento'];
-            echo "<!-- Datos desde Redis -->"; // opcional, para depurar
-        } else {
-            throw new Exception("No hay caché");
         }
-    } catch (Exception $e) {
-        // -------------------- FALLBACK A MySQL --------------------
-        $conn = conectar_bd();
-        $sql = "SELECT temperatura, humedad, presion, velocidad_viento, fecha_hora 
-                FROM datos_clima ORDER BY fecha_hora DESC LIMIT 1";
-        $resultado = mysqli_query($conn, $sql);
-        if (mysqli_num_rows($resultado) > 0) {
-            $fila = mysqli_fetch_assoc($resultado);
-            $temperatura = $fila['temperatura'];
-            $humedad = $fila['humedad'];
-            $presion = $fila['presion'];
-            $viento = $fila['velocidad_viento'];
-        } else {
-            $temperatura = $humedad = $presion = $viento = "No hay datos";
-        }
-        mysqli_close($conn);
     }
+
+    // Si Redis no tenía datos, intentar MySQL
+    if ($temperatura === "No hay datos") {
+        $conn = conectar_bd();
+        if ($conn !== false) {
+            $sql = "SELECT temperatura, humedad, presion, velocidad_viento 
+                    FROM datos_clima ORDER BY fecha_hora DESC LIMIT 1";
+            $resultado = mysqli_query($conn, $sql);
+            if ($resultado && mysqli_num_rows($resultado) > 0) {
+                $fila = mysqli_fetch_assoc($resultado);
+                $temperatura = $fila['temperatura'];
+                $humedad = $fila['humedad'];
+                $presion = $fila['presion'];
+                $viento = $fila['velocidad_viento'];
+            }
+            mysqli_close($conn);
+        }
+    }
+
+    // Calcular la media (solo si hay conexión, pero la función ya maneja false)
+    $media_24h = obtener_media_24h();
+
+    // ---------------- INFORMACIÓN DE SESIÓN ----------------
+    session_start();
+    $is_logged_in = isset($_SESSION['usuario_id']);
+    $username = $_SESSION['usuario_nombre'] ?? '';
+
     require_once __DIR__ . '/../vistas/panel.php';
 }
 
-# ==================== LOGIN ====================
+# Login
 function procesar_login() {
     session_start();
     if (isset($_SESSION['usuario_id'])) {
@@ -85,7 +97,7 @@ function cerrar_sesion() {
     exit;
 }
 
-# ==================== GESTIÓN DE UMBRALES ====================
+# Gestión de umbrales
 function listar_umbrales() {
     session_start();
     if (!isset($_SESSION['usuario_id'])) {
@@ -172,7 +184,7 @@ function eliminar_umbral() {
     exit;
 }
 
-# ==================== API PARA EL MAPA ====================
+# API para el mapa
 function obtener_temperatura_json() {
     header('Content-Type: application/json');
     $conn = conectar_bd();
@@ -185,4 +197,23 @@ function obtener_temperatura_json() {
         echo json_encode(['error' => 'No hay datos']);
     }
     mysqli_close($conn);
+}
+
+#Obtener media de temperatura de las últimas 24 horas
+function obtener_media_24h() {
+    $conn = conectar_bd();
+    if ($conn === false) {
+        return "No disponible (BD caída)";
+    }
+    $sql = "SELECT AVG(temperatura) AS media FROM datos_clima WHERE fecha_hora >= NOW() - INTERVAL 24 HOUR";
+    $resultado = mysqli_query($conn, $sql);
+    if ($resultado && mysqli_num_rows($resultado) > 0) {
+        $fila = mysqli_fetch_assoc($resultado);
+        $media = round($fila['media'], 1);
+        mysqli_close($conn);
+        return $media;
+    } else {
+        mysqli_close($conn);
+        return "Sin datos suficientes";
+    }
 }
