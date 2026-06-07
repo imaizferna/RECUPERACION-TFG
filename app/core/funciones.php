@@ -1,6 +1,6 @@
 <?php
 
-# CONEXIÓN A LA BASE DE DATOS
+# ==================== CONEXIÓN A LA BASE DE DATOS ====================
 function conectar_bd() {
     $host = getenv('MYSQL_HOST');
     $usuario = getenv('MYSQL_USER');
@@ -14,29 +14,26 @@ function conectar_bd() {
     return $conexion;
 }
 
-# PANEL PRINCIPAL
+# ==================== PANEL PRINCIPAL ====================
 function mostrar_panel() {
     $conn = conectar_bd();
-    $sql = "SELECT temperatura, humedad, presion, velocidad_viento FROM datos_clima ORDER BY fecha_hora DESC LIMIT 1";
+    $sql = "SELECT temperatura, humedad, presion, velocidad_viento, fecha_hora 
+            FROM datos_clima ORDER BY fecha_hora DESC LIMIT 1";
     $resultado = mysqli_query($conn, $sql);
-
-    if (mysqli_num_rows($resultado) == 1) {
+    if (mysqli_num_rows($resultado) > 0) {
         $fila = mysqli_fetch_assoc($resultado);
         $temperatura = $fila['temperatura'];
         $humedad = $fila['humedad'];
         $presion = $fila['presion'];
         $viento = $fila['velocidad_viento'];
     } else {
-        $temperatura = "No hay datos";
-        $humedad = "No hay datos";
-        $presion = "No hay datos";
-        $viento = "No hay datos";
+        $temperatura = $humedad = $presion = $viento = "No hay datos";
     }
     mysqli_close($conn);
     require_once __DIR__ . '/../vistas/panel.php';
 }
 
-# LOGIN
+# ==================== LOGIN ====================
 function procesar_login() {
     session_start();
     if (isset($_SESSION['usuario_id'])) {
@@ -63,7 +60,6 @@ function procesar_login() {
     require_once __DIR__ . '/../vistas/login.php';
 }
 
-# CERRAR SESIÓN
 function cerrar_sesion() {
     session_start();
     session_destroy();
@@ -71,7 +67,7 @@ function cerrar_sesion() {
     exit;
 }
 
-# LISTAR UMBRALES
+# ==================== GESTIÓN DE UMBRALES ====================
 function listar_umbrales() {
     session_start();
     if (!isset($_SESSION['usuario_id'])) {
@@ -79,14 +75,13 @@ function listar_umbrales() {
         exit;
     }
     $conn = conectar_bd();
-    $sql = "SELECT * FROM umbrales";
+    $sql = "SELECT * FROM umbrales ORDER BY id DESC";
     $resultado = mysqli_query($conn, $sql);
     $umbrales = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
     mysqli_close($conn);
     require_once __DIR__ . '/../vistas/umbrales/lista.php';
 }
 
-# CREAR UMBRAL
 function crear_umbral() {
     session_start();
     if (!isset($_SESSION['usuario_id'])) {
@@ -108,7 +103,6 @@ function crear_umbral() {
     require_once __DIR__ . '/../vistas/umbrales/formulario.php';
 }
 
-# EDITAR UMBRAL
 function editar_umbral() {
     session_start();
     if (!isset($_SESSION['usuario_id'])) {
@@ -143,7 +137,6 @@ function editar_umbral() {
     require_once __DIR__ . '/../vistas/umbrales/formulario.php';
 }
 
-# ELIMINAR UMBRAL
 function eliminar_umbral() {
     session_start();
     if (!isset($_SESSION['usuario_id'])) {
@@ -161,14 +154,17 @@ function eliminar_umbral() {
     exit;
 }
 
-# API PARA GRÁFICA (provisional)
-function obtener_historico_json() {
+# ==================== API PARA EL MAPA ====================
+function obtener_temperatura_json() {
     header('Content-Type: application/json');
     $conn = conectar_bd();
-    $sql = "SELECT fecha_hora, temperatura FROM datos_clima ORDER BY fecha_hora DESC LIMIT 24";
+    $sql = "SELECT temperatura FROM datos_clima ORDER BY fecha_hora DESC LIMIT 1";
     $resultado = mysqli_query($conn, $sql);
-    $datos = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
+    if (mysqli_num_rows($resultado) > 0) {
+        $fila = mysqli_fetch_assoc($resultado);
+        echo json_encode(['temperatura' => $fila['temperatura']]);
+    } else {
+        echo json_encode(['error' => 'No hay datos']);
+    }
     mysqli_close($conn);
-    $datos = array_reverse($datos);
-    echo json_encode($datos);
 }

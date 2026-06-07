@@ -27,6 +27,32 @@
             <div class="valor"><?php echo $viento; ?> <span class="unidad">m/s</span></div>
         </div>
     </div>
+    <h2 style="text-align: center; margin-top: 30px; color: white;">🗺️ Ubicación: Pamplona</h2>
+    <div id="map" style="height: 400px; width: 100%; max-width: 800px; margin: 0 auto; border-radius: 15px;"></div>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var lat = 42.8125;
+        var lon = -1.6458;
+        var map = L.map('map').setView([lat, lon], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        fetch('/api_temperatura.php')
+            .then(response => response.json())
+            .then(data => {
+                var temp = data.temperatura ? data.temperatura : '?';
+                L.marker([lat, lon]).addTo(map)
+                    .bindPopup('Temperatura actual: ' + temp + ' °C')
+                    .openPopup();
+            })
+            .catch(error => {
+                console.error('Error al cargar temperatura:', error);
+                L.marker([lat, lon]).addTo(map)
+                    .bindPopup('Error al obtener temperatura')
+                    .openPopup();
+            });
+    </script>
     <footer>Datos actualizados automáticamente cada 10 minutos | <?php echo date('d/m/Y H:i:s'); ?></footer>
 </div>
 </body>
